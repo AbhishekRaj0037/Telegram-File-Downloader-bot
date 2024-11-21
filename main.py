@@ -7,26 +7,20 @@ import requests
 import asyncio
 import os
 
-
-# api_id = 27690446
-# api_hash = "d56f7ac259b7c1dab704103ee45b0927"
-# bot_token = "7244121655:AAHbyHRnT2KA98TnYP1K8tvDblPICU7Gp7g"
-
-# app = Client("UFDBOT0037", api_id=api_id, api_hash=api_hash)
 app = Client("UFDBOT0037")
+
 
 async def upload_file(filename):
     try:
         async def progress(current, total):
             print(f"Uploading file : {current * 100 / total:.1f}%  ↑...↑...↑")
+        await app.send_message("@UFD0037Bot", "Uploading file please wait ⌛...")
         await app.send_document("@UFD0037Bot", document=filename, progress=progress)
         print(f"File Uploaded successfully as {filename} (＾▽＾)")
-        await app.send_message("@UFD0037Bot", "File Uploaded successfully !")
-        await app.send_message("@UFD0037Bot", "Here is your file")
+        await app.send_message("@UFD0037Bot", "File Uploaded successfully ✅")
         os.remove(filename)
     except:
-        print("Some error occurred (×_×)")
-        await app.send_message("@UFD0037Bot", "Some error occurred please try again")
+        print(f"Error uploading the file: {e} (×_×)")
 
 async def download_file(url):
     try:
@@ -61,32 +55,36 @@ async def download_file(url):
         
         print(f"File downloaded successfully as {filename} (＾▽＾)")
         return filename
-    
+        
     except requests.exceptions.RequestException as e:
         print(f"Error downloading the file: {e} (×_×)")
-        await app.send_message("@UFD0037Bot", "Some error occurred please try again")
+
     
 
 @app.on_message(filters.command(["start"]))
-async def my_handler(client, message):
-    chat=message.chat
-    await app.send_message("@UFD0037Bot", "UDF Bot is Awake (•_•)")
-    URL = await chat.ask('Please send URL to upload file', filters=filters.text)
-    is_url_valid=validators.url(URL.text)
-    current_attempt=1
-    max_attempt=5
-    while is_url_valid != True and current_attempt<=max_attempt:
-        await app.send_message("@UFD0037Bot", "URL is invalid !")
-        URL=await chat.ask('Please send a valid URL to upload file', filters=filters.text)
+async def my_start_handler(client, message):
+    try:
+        chat=message.chat
+        await app.send_message("@UFD0037Bot", "UDF Bot is Awake 👀")
+        URL = await chat.ask('Please send URL to upload file', filters=filters.text)
         is_url_valid=validators.url(URL.text)
-        current_attempt=current_attempt+1
-    if current_attempt>max_attempt:
-        await app.send_message("@UFD0037Bot", "Sleeping (-_-)zzz")
+        current_attempt=1
+        max_attempt=5
+        while is_url_valid != True and current_attempt<=max_attempt:
+            await app.send_message("@UFD0037Bot", "URL is invalid ❌")
+            URL=await chat.ask('Please send a valid URL to upload file', filters=filters.text)
+            is_url_valid=validators.url(URL.text)
+            current_attempt=current_attempt+1
+        if current_attempt>max_attempt:
+            await app.send_message("@UFD0037Bot", "Sleeping 😴")
+            await idle()
+        filename= await download_file(URL.text)
+        await upload_file(filename)
+        await app.send_message("@UFD0037Bot", "Sleeping 😴")
         await idle()
-    filename= await download_file(URL.text)
-    await upload_file(filename)
-
-
-    
+    except:
+        print("Some error occurred (×_×)")
+        await app.send_message("@UFD0037Bot", "Some error ❌ occurred. Please try again...")
+        await app.send_message("@UFD0037Bot", "Sleeping 😴")
 
 app.run()
